@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/config"
+	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/auth"
+	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/logger"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/server"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/storage"
 	"github.com/gin-gonic/gin"
@@ -25,6 +27,14 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	var databaseClient storage.DatabaseClient
+
+	startupLog, err := logger.New("System Startup", "main.go", nil)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	startupLog.MessageType = "INFO"
+	startupLog.Message = "Приложение запускается..."
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -50,6 +60,9 @@ func main() {
 	//
 	//
 	//
+	// Routes
+	userHadnler := auth.NewHandler(pool, startupLog)
+	userHadnler.InitHandler(router)
 
 	initingServer := &server.Server{}
 	done := make(chan os.Signal, 1)

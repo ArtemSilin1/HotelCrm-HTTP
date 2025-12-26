@@ -7,46 +7,68 @@ import (
 )
 
 const (
-	LogMessageTypeError = "--> Ошибка"
+	DefaultLogPath = "./logs.txt"
 )
 
-type LogMessage struct {
+type Logger struct {
 	Title       string
 	Message     string
 	Timestamp   time.Time
 	Location    string
 	MessageType string
+	FilePath    string
 }
 
-func NewLog(title, location string, logEror error) error {
-	errorText := ""
-	messageType := ""
+func New(title, location string, logError error) (*Logger, error) {
+	messageText := ""
 
-	if logEror != nil {
-		errorText = logEror.Error()
-		messageType = LogMessageTypeError
+	if logError != nil {
+		messageText = logError.Error()
 	}
 
-	log := &LogMessage{
-		MessageType: messageType,
-		Message:     errorText,
-		Title:       title,
-		Location:    location,
-		Timestamp:   time.Now(),
-	}
-
-	f, err := os.OpenFile("./logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(DefaultLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("не удалось инициализировать файл логов: %w", err)
 	}
+	f.Close()
 
+	return &Logger{
+		Title:     title,
+		Location:  location,
+		Message:   messageText,
+		Timestamp: time.Now(),
+		FilePath:  "./logs.txt",
+	}, nil
+}
+
+func (l *Logger) Write() {
+	f, err := os.OpenFile(l.FilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
 	defer f.Close()
 
 	logLine := fmt.Sprintf("[%s] - [%s]: %s - '%s' :: %s\n",
-		log.Timestamp.Format(time.RFC3339), log.MessageType, log.Title, log.Message, log.Location)
+		l.Timestamp.Format(time.RFC3339),
+		l.MessageType,
+		l.Title,
+		l.Message,
+		l.Location,
+	)
+
 	if _, err := f.WriteString(logLine); err != nil {
-		return err
+		return
 	}
 
-	return nil
+	return
+}
+
+func Error(title, location string, logErr error) {
+	l, err := New(title, location, logErr)
+	if err != nil {
+		fmt.Printf("Ошибка логгера: %v\n", err)
+		return
+	}
+	l.MessageType = "ERROR"
+	l.Write()
 }
