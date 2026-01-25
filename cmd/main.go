@@ -10,6 +10,8 @@ import (
 
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/config"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/auth"
+	clients_handler "github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/clients"
+	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/rooms"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/logger"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/server"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/storage"
@@ -47,7 +49,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:3000")
+		c.Header("Access-Control-Allow-Origin", "http://localhost:5173")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Content-Type")
 		if c.Request.Method == "OPTIONS" {
@@ -57,12 +59,20 @@ func main() {
 		c.Next()
 	})
 
-	//
-	//
-	//
+	//var __master_user_init__ users.Users
+	//if err := __master_user_init__.Test(pool); err != nil {
+	//	log.Fatal(err.Error())
+	//}
+
 	// Routes
 	userHadnler := auth.NewHandler(pool, startupLog)
 	userHadnler.InitHandler(router)
+
+	clientHandler := clients_handler.NewHandler(pool, startupLog)
+	clientHandler.InitHandler(router)
+
+	roomHandler := rooms.NewHandler(pool, startupLog)
+	roomHandler.InitHandler(router)
 
 	initingServer := &server.Server{}
 	done := make(chan os.Signal, 1)

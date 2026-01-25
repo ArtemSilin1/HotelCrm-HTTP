@@ -23,6 +23,33 @@ type Users struct {
 	UserRole string `json:"userRole"`
 }
 
+// ============
+//func (u *Users) Test(db *pgxpool.Pool) error {
+//	u.Username = "master_admin"
+//	u.Password = "123456"
+//	u.UserRole = data.Admin_manager
+//
+//	hashedPassword, err := u.hashPassword()
+//	if err != nil {
+//		fmt.Println(err.Error())
+//		return err
+//	}
+//
+//	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+//	defer cancel()
+//
+//	q := "INSERT INTO Users(username, hash_password, user_role) VALUES ($1, $2, $3)"
+//
+//	_, err = db.Exec(ctx, q, u.Username, hashedPassword, u.UserRole)
+//	if err != nil {
+//		fmt.Println(err.Error())
+//		return err
+//	}
+//
+//	return err
+//}
+// ============
+
 func (u *Users) hashPassword() (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -91,7 +118,8 @@ func (u *Users) LoginUser(db *pgxpool.Pool) (string, error) {
 
 	query := "SELECT id, username, hash_password, user_role FROM users WHERE username = $1"
 
-	var userFromDatabase *Users
+	var userFromDatabase Users
+
 	if err := db.QueryRow(ctx, query, u.Username).Scan(
 		&userFromDatabase.Id,
 		&userFromDatabase.Username,
@@ -104,6 +132,7 @@ func (u *Users) LoginUser(db *pgxpool.Pool) (string, error) {
 		return "", err
 	}
 
+	// Сравниваем пароли
 	if err := bcrypt.CompareHashAndPassword(
 		[]byte(userFromDatabase.Password),
 		[]byte(u.Password),
@@ -112,7 +141,8 @@ func (u *Users) LoginUser(db *pgxpool.Pool) (string, error) {
 	}
 
 	var jwtManager JWTToken
-	token, err := jwtManager.GenerateToken(userFromDatabase)
+	// Передаем адрес структуры в генератор токена
+	token, err := jwtManager.GenerateToken(&userFromDatabase)
 	if err != nil {
 		return "", err
 	}

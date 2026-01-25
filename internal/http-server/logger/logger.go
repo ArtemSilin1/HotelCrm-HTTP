@@ -24,13 +24,15 @@ func New(title, location string, logError error) (*Logger, error) {
 
 	if logError != nil {
 		messageText = logError.Error()
+		fmt.Println(logError.Error())
 	}
 
 	f, err := os.OpenFile(DefaultLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось инициализировать файл логов: %w", err)
+	if err == nil {
+		f.Close()
 	}
-	f.Close()
+
+	fmt.Println(messageText)
 
 	return &Logger{
 		Title:     title,

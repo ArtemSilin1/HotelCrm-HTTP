@@ -10,6 +10,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+const moduleName = "AuthModule"
+
 func NewHandler(db *pgxpool.Pool, log *logger.Logger) *HandlerAuth {
 	return &HandlerAuth{
 		db:     db,
@@ -23,7 +25,7 @@ type HandlerAuth struct {
 }
 
 func (h *HandlerAuth) InitHandler(router *gin.Engine) {
-	router.POST("/user/auth", h.Create)
+	router.POST("/user/create-acc", h.Create)
 	router.POST("/user/enter-acc", h.Login)
 }
 
@@ -34,13 +36,13 @@ type UserRequest struct {
 
 func (h *HandlerAuth) Create(c *gin.Context) {
 	var request UserRequest
-
-	userRole, tokenIsValid := h.getUserRole(&request.Token)
-
-	if !tokenIsValid || userRole != data.Admin_manager {
-		c.JSON(http.StatusForbidden, gin.H{"error": "token is invalid"})
-		return
-	}
+	//
+	//userRole, tokenIsValid := h.getUserRole(&request.Token)
+	//
+	//if !tokenIsValid || userRole != data.Admin_manager {
+	//	c.JSON(http.StatusForbidden, gin.H{"error": "token is invalid"})
+	//	return
+	//}
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"response": data.WrongData})
@@ -49,7 +51,7 @@ func (h *HandlerAuth) Create(c *gin.Context) {
 
 	token, err := request.User.CreateUser(h.db)
 	if err != nil {
-		// Тут логгер
+		logger.New("error", moduleName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"response": data.InternalError})
 		return
 	}
@@ -67,6 +69,7 @@ func (h *HandlerAuth) Login(c *gin.Context) {
 
 	token, err := user.LoginUser(h.db)
 	if err != nil {
+		logger.New("error", moduleName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"response": data.InternalError})
 		return
 	}
@@ -77,6 +80,7 @@ func (h *HandlerAuth) Login(c *gin.Context) {
 func (h *HandlerAuth) getUserRole(token *users.JWTToken) (string, bool) {
 	mapClaims, err := token.VerifyToken(token.Token)
 	if err != nil {
+		logger.New("error", moduleName, err)
 		return "", false
 	}
 
