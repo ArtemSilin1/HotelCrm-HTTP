@@ -1,6 +1,7 @@
 package rooms
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/logger"
@@ -27,11 +28,13 @@ func (h *Handler) InitHandler(router *gin.Engine) {
 func (h *Handler) EditStatus(c *gin.Context) {
 	var roomRequest db_rooms.Rooms
 	if err := c.ShouldBindJSON(&roomRequest); err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"response": data.WrongData})
 		return
 	}
 
 	if err := roomRequest.EditRoomStatus(h.db); err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"response": err.Error()})
 		return
 	}
