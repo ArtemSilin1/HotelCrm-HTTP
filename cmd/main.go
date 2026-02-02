@@ -10,6 +10,7 @@ import (
 
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/config"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/auth"
+	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/booking"
 	clients_handler "github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/clients"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/handlers/rooms"
 	"github.com/ArtemSilin1/HotelCrm-HTTP/internal/http-server/logger"
@@ -73,6 +74,9 @@ func main() {
 
 	roomHandler := rooms.NewHandler(pool, startupLog)
 	roomHandler.InitHandler(router)
+
+	bookingHandler := booking.NewHandler(pool)
+	bookingHandler.InitHandler(router)
 
 	initingServer := &server.Server{}
 	done := make(chan os.Signal, 1)

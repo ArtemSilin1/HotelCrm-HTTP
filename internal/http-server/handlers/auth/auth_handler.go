@@ -29,13 +29,13 @@ func (h *HandlerAuth) InitHandler(router *gin.Engine) {
 	router.POST("/user/enter-acc", h.Login)
 }
 
-type UserRequest struct {
-	Token users.JWTToken `json:"token"`
-	User  users.Users    `json:"users"`
-}
+//type UserRequest struct {
+//	Token users.JWTToken `json:"token"`
+//	User  users.Users    `json:"users"`
+//}
 
 func (h *HandlerAuth) Create(c *gin.Context) {
-	var request UserRequest
+	var request users.Users
 	//
 	//userRole, tokenIsValid := h.getUserRole(&request.Token)
 	//
@@ -49,14 +49,14 @@ func (h *HandlerAuth) Create(c *gin.Context) {
 		return
 	}
 
-	token, err := request.User.CreateUser(h.db)
+	_, err := request.CreateUser(h.db)
 	if err != nil {
 		logger.New("error", moduleName, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"response": data.InternalError})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"response": token})
+	c.JSON(http.StatusOK, gin.H{"response": "done"})
 }
 
 func (h *HandlerAuth) Login(c *gin.Context) {

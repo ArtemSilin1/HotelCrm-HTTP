@@ -88,17 +88,13 @@ func (u *Users) checkValidPassword(db *pgxpool.Pool) bool {
 }
 
 func (u *Users) CreateUser(db *pgxpool.Pool) (string, error) {
-	isExist := u.checkUserExist(db)
-	if isExist {
-		return "", fmt.Errorf(data.UserExists)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	hashedPassword, err := u.hashPassword()
 	createUserQ := "INSERT INTO users (username, hash_password, user_role) VALUES ($1, $2, $3)"
 
-	_, err := db.Exec(ctx, createUserQ, u.Username, u.Password, u.UserRole)
+	_, err = db.Exec(ctx, createUserQ, u.Username, hashedPassword, u.UserRole)
 	if err != nil {
 		return "", err
 	}
